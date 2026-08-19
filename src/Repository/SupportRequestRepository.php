@@ -16,6 +16,16 @@ class SupportRequestRepository extends ServiceEntityRepository
         parent::__construct($registry, SupportRequest::class);
     }
 
+    public function findByStatus(string $status): array
+    {
+        return $this->createQueryBuilder('s')
+            ->andWhere('s.status = :status')
+            ->setParameter('status', $status)
+            ->orderBy('s.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return SupportRequest[] Returns an array of SupportRequest objects
     //     */

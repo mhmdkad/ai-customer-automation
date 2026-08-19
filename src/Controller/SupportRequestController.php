@@ -7,8 +7,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\SupportRequest;
+use App\Repository\SupportRequestRepository;
+use App\Service\SupportRequestService;
 
 class SupportRequestController
 {
@@ -16,7 +16,7 @@ class SupportRequestController
     public function create(
         Request $request,
         ValidatorInterface $validator,
-        EntityManagerInterface $entityManager,
+        SupportRequestService $supportRequestService,
     ): JsonResponse {
         $data = $request->toArray();
 
@@ -26,17 +26,6 @@ class SupportRequestController
         );
 
         $violations = $validator->validate($input);
-
-        $supportRequest = new SupportRequest();
-
-        $supportRequest->setCustomerEmail($input->customerEmail);
-        $supportRequest->setMessage($input->message);
-        $supportRequest->setStatus('new');
-        $supportRequest->setCreatedAt(new \DateTimeImmutable());
-
-        $entityManager->persist($supportRequest);
-        $entityManager->flush();
-        $supportRequest->getId();
 
         if (count($violations) > 0) {
             $errors = [];
@@ -50,13 +39,59 @@ class SupportRequestController
             ], 400);
         }
 
+        $supportRequest = $supportRequestService->create(
+            $input->customerEmail,
+            $input->message,
+        );
+
         return new JsonResponse([
             'id' => $supportRequest->getId(),
             'customerEmail' => $input->customerEmail,
             'message' => $input->message,
         ], 201);
+    }
 
+    #[Route('/api/support-requests/{id}', methods: ['GET'])]
+    public function getOne(
+        int $id,
+        SupportRequestRepository $repository,
+    ): JsonResponse {
+        $supportRequest = $repository->find($id);
 
+        if ($supportRequest === null) {
+            return new JsonResponse([
+                'error' => 'Support request not found',
+            ], 404);
+        }
 
+        return new JsonResponse([
+            'id' => $supportRequest->getId(),
+            'customerEmail' => $supportRequest->getCustomerEmail(),
+            'message' => $supportRequest->getMessage(),
+            'status' => $supportRequest->getStatus(),
+        ]);
+    }
+
+    #[Route('/api/support-requests', methods: ['GET'])]
+    public function getByStatus(
+        Request $request,
+        SupportRequestRepository $repository,
+    ): JsonResponse {
+        $status = $request->query->get('status', 'new');
+
+        $supportRequests = $repository->findByStatus($status);
+
+        $results = [];
+
+        foreach ($supportRequests as $supportRequest) {
+            $results[] = [
+                'id' => $supportRequest->getId(),
+                'customerEmail' => $supportRequest->getCustomerEmail(),
+                'message' => $supportRequest->getMessage(),
+                'status' => $supportRequest->getStatus(),
+            ];
+        }
+
+        return new JsonResponse($results);
     }
 }
