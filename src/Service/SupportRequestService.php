@@ -9,6 +9,7 @@ class SupportRequestService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private NotificationInterface $notification,
     ) {
     }
 
@@ -25,6 +26,10 @@ class SupportRequestService
 
         $this->entityManager->persist($supportRequest);
         $this->entityManager->flush();
+
+        $this->notification->send(
+            'New support request from ' . $customerEmail
+        );
 
         return $supportRequest;
     }
