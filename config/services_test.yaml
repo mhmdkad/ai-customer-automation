@@ -1,0 +1,3 @@
+services:
+    App\Service\NotificationInterface:
+        alias: App\Service\TestNotificationService
