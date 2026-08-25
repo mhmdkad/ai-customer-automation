@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\SupportRequest;
+use Psr\Log\LoggerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
 class SupportRequestService
@@ -10,6 +11,7 @@ class SupportRequestService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private NotificationInterface $notification,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -27,9 +29,19 @@ class SupportRequestService
         $this->entityManager->persist($supportRequest);
         $this->entityManager->flush();
 
-        $this->notification->send(
-            'New support request from ' . $customerEmail
-        );
+        try {
+            $this->notification->send(
+                'New support request from ' . $customerEmail
+            );
+        } catch (NotificationException $e) {
+            $this->logger->warning(
+                'Support request notification failed',
+                [
+                    'customerEmail' => $customerEmail,
+                    'exception' => $e,
+                ]
+            );
+        }
 
         return $supportRequest;
     }

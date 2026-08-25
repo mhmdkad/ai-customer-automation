@@ -2,10 +2,12 @@
 
 namespace App\Tests\Service;
 
+use App\Service\NotificationException;
 use App\Service\NotificationInterface;
 use App\Service\SupportRequestService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class SupportRequestServiceTest extends TestCase
 {
@@ -28,9 +30,12 @@ class SupportRequestServiceTest extends TestCase
             ->method('send')
             ->with('New support request from test@example.com');
 
+        $logger = $this->createStub(LoggerInterface::class);
+
         $service = new SupportRequestService(
             $entityManager,
             $notification,
+            $logger,
         );
 
         $supportRequest = $service->create(
@@ -62,14 +67,18 @@ class SupportRequestServiceTest extends TestCase
         $notification
             ->expects($this->once())
             ->method('send')
-            ->willThrowException(new \RuntimeException('Notification failed'));
+            ->willThrowException(new NotificationException('Notification failed'));
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger
+            ->expects($this->once())
+            ->method('warning');
 
         $service = new SupportRequestService(
             $entityManager,
             $notification,
+            $logger,
         );
-
-        $this->expectException(\RuntimeException::class);
 
         $service->create(
             'test@example.com',
