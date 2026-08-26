@@ -4,6 +4,8 @@ namespace App\Tests\Service;
 
 use App\Service\NotificationException;
 use App\Service\NotificationInterface;
+use App\Entity\SupportRequest;
+use App\Enum\SupportRequestStatus;
 use App\Service\SupportRequestService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
@@ -83,6 +85,42 @@ class SupportRequestServiceTest extends TestCase
         $service->create(
             'test@example.com',
             'I cannot log in',
+        );
+    }
+
+    public function testUpdateStatusUpdatesSupportRequest(): void
+    {
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+
+        $entityManager
+            ->expects($this->once())
+            ->method('flush');
+
+        $notification = $this->createStub(NotificationInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
+
+        $service = new SupportRequestService(
+            $entityManager,
+            $notification,
+            $logger,
+        );
+
+        $supportRequest = new SupportRequest();
+        $supportRequest->setStatus('new');
+
+        $result = $service->updateStatus(
+            $supportRequest,
+            SupportRequestStatus::IN_PROGRESS,
+        );
+
+        $this->assertSame(
+            'in_progress',
+            $result->getStatus()
+        );
+
+        $this->assertSame(
+            $supportRequest,
+            $result
         );
     }
 }

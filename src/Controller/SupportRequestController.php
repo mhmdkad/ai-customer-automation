@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\DTO\SupportRequestInput;
+use App\DTO\SupportRequestStatusInput;
+use App\Enum\SupportRequestStatus;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -93,5 +95,56 @@ class SupportRequestController
         }
 
         return new JsonResponse($results);
+    }
+
+    #[Route('/api/support-requests/{id}', methods: ['PATCH'])]
+    public function updateStatus(
+        int $id,
+        Request $request,
+        ValidatorInterface $validator,
+        SupportRequestRepository $repository,
+        SupportRequestService $supportRequestService,
+    ): JsonResponse {
+        $data = $request->toArray();
+
+        $input = new SupportRequestStatusInput(
+            status: $data['status'] ?? '',
+        );
+
+        $violations = $validator->validate($input);
+
+        if (count($violations) > 0) {
+            $errors = [];
+
+            foreach ($violations as $violation) {
+                $errors[] = $violation->getMessage();
+            }
+
+            return new JsonResponse([
+                'errors' => $errors,
+            ], 400);
+        }
+
+        $supportRequest = $repository->find($id);
+
+        if ($supportRequest === null) {
+            return new JsonResponse([
+                'error' => 'Support request not found',
+            ], 404);
+        }
+
+        $status = SupportRequestStatus::from($input->status);
+
+        $supportRequest = $supportRequestService->updateStatus(
+            $supportRequest,
+            $status,
+        );
+
+        return new JsonResponse([
+            'id' => $supportRequest->getId(),
+            'customerEmail' => $supportRequest->getCustomerEmail(),
+            'message' => $supportRequest->getMessage(),
+            'status' => $supportRequest->getStatus(),
+        ], 200);
     }
 }

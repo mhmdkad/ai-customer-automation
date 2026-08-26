@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\SupportRequest;
+use App\Enum\SupportRequestStatus;
 use Psr\Log\LoggerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -45,4 +46,16 @@ class SupportRequestService
 
         return $supportRequest;
     }
+
+    public function updateStatus(
+        SupportRequest $supportRequest,
+        SupportRequestStatus $status,
+    ): SupportRequest {
+        $supportRequest->setStatus($status->value);
+
+        $this->entityManager->flush();
+
+        return $supportRequest;
+    }
+
 }
