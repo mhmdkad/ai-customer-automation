@@ -38,7 +38,7 @@ class SupportRequestController
 
             return new JsonResponse([
                 'errors' => $errors,
-            ], 400);
+            ], 422);
         }
 
         $supportRequest = $supportRequestService->create(
@@ -122,7 +122,7 @@ class SupportRequestController
 
             return new JsonResponse([
                 'errors' => $errors,
-            ], 400);
+            ], 422);
         }
 
         $supportRequest = $repository->find($id);

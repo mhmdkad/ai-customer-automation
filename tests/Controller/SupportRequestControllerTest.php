@@ -65,7 +65,7 @@ class SupportRequestControllerTest extends WebTestCase
             ]),
         );
 
-        $this->assertResponseStatusCodeSame(400);
+        $this->assertResponseStatusCodeSame(422);
     }
 
     public function testUpdateStatusReturnsNotFoundForMissingRequest(): void
