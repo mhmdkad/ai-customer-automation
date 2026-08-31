@@ -28,6 +28,7 @@ class SupportRequestControllerTest extends WebTestCase
             'PATCH',
             '/api/support-requests/' . $supportRequest->getId(),
             server: [
+                'HTTP_AUTHORIZATION' => 'Bearer test-api-key',
                 'CONTENT_TYPE' => 'application/json',
             ],
             content: json_encode([
@@ -58,6 +59,7 @@ class SupportRequestControllerTest extends WebTestCase
             'PATCH',
             '/api/support-requests/99999',
             server: [
+                'HTTP_AUTHORIZATION' => 'Bearer test-api-key',
                 'CONTENT_TYPE' => 'application/json',
             ],
             content: json_encode([
@@ -76,6 +78,7 @@ class SupportRequestControllerTest extends WebTestCase
             'PATCH',
             '/api/support-requests/99999',
             server: [
+                'HTTP_AUTHORIZATION' => 'Bearer test-api-key',
                 'CONTENT_TYPE' => 'application/json',
             ],
             content: json_encode([

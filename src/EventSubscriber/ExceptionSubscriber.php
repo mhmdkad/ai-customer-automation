@@ -7,6 +7,9 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class ExceptionSubscriber implements EventSubscriberInterface
 {
@@ -24,8 +27,18 @@ class ExceptionSubscriber implements EventSubscriberInterface
 
     public function onKernelException(ExceptionEvent $event): void
     {
+        if ($event->getThrowable() instanceof HttpExceptionInterface) {
+            return;
+        }
+        if (
+            $event->getThrowable() instanceof AuthenticationException
+            || $event->getThrowable() instanceof AccessDeniedException
+        ) {
+            return;
+        }
+
         $this->logger->error(
-            'Unhandled exception',
+            'Unhandled exception: ' . $event->getThrowable()::class,
             [
                 'exception' => $event->getThrowable(),
             ]
