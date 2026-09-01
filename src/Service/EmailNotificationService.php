@@ -6,6 +6,6 @@ class EmailNotificationService implements NotificationInterface
 {
     public function send(string $message): void
     {
-        echo "Sending email: " . $message;
+        error_log("Sending email: " . $message);
     }
 }
