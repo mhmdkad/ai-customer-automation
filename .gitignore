@@ -15,3 +15,5 @@
 ###< phpunit/phpunit ###
 
 /python/.venv/
+python/.env
+python/__pycache__/
