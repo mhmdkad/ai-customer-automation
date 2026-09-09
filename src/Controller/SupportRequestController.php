@@ -11,6 +11,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\SupportRequestRepository;
 use App\Service\SupportRequestService;
+use App\DTO\SupportRequestPriorityInput;
+use App\Enum\SupportRequestPriority;
 
 class SupportRequestController
 {
@@ -146,5 +148,53 @@ class SupportRequestController
             'message' => $supportRequest->getMessage(),
             'status' => $supportRequest->getStatus(),
         ], 200);
+    }
+
+    #[Route('/api/support-requests/{id}/priority', methods: ['PATCH'])]
+    public function updatePriority(
+        int $id,
+        Request $request,
+        ValidatorInterface $validator,
+        SupportRequestRepository $repository,
+        SupportRequestService $supportRequestService,
+    ): JsonResponse {
+        $data = $request->toArray();
+
+        $input = new SupportRequestPriorityInput(
+            priority: $data['priority'] ?? '',
+        );
+
+        $violations = $validator->validate($input);
+
+        if (count($violations) > 0) {
+            $errors = [];
+
+            foreach ($violations as $violation) {
+                $errors[] = $violation->getMessage();
+            }
+
+            return new JsonResponse([
+                'errors' => $errors,
+            ], 422);
+        }
+
+        $supportRequest = $repository->find($id);
+
+        if ($supportRequest === null) {
+            return new JsonResponse([
+                'error' => 'Support request not found',
+            ], 404);
+        }
+
+        $priority = SupportRequestPriority::from($input->priority);
+
+        $supportRequest->setPriority($priority);
+
+        $supportRequestService->save($supportRequest);
+
+        return new JsonResponse([
+            'id' => $supportRequest->getId(),
+            'priority' => $supportRequest->getPriority(),
+        ]);
     }
 }

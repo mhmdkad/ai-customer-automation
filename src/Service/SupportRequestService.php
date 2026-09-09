@@ -6,6 +6,7 @@ use App\Entity\SupportRequest;
 use App\Enum\SupportRequestStatus;
 use Psr\Log\LoggerInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Application\Port\AutomationPort;
 
 class SupportRequestService
 {
@@ -13,6 +14,7 @@ class SupportRequestService
         private EntityManagerInterface $entityManager,
         private NotificationInterface $notification,
         private LoggerInterface $logger,
+        private AutomationPort $automation,
     ) {
     }
 
@@ -29,6 +31,11 @@ class SupportRequestService
 
         $this->entityManager->persist($supportRequest);
         $this->entityManager->flush();
+        $this->automation->supportRequestCreated(
+            $supportRequest->getId(),
+            $customerEmail,
+            $message,
+        );
 
         try {
             $this->notification->send(
@@ -56,6 +63,11 @@ class SupportRequestService
         $this->entityManager->flush();
 
         return $supportRequest;
+    }
+
+    public function save(SupportRequest $supportRequest): void
+    {
+        $this->entityManager->flush();
     }
 
 }

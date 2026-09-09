@@ -28,3 +28,10 @@ services:
     App\Security\ApiKeyAuthenticator:
         arguments:
             $apiKey: '%app.api_key%'
+
+    App\Application\Port\AutomationPort:
+        alias: App\Infrastructure\Automation\N8nWebhookAdapter
+
+    App\Infrastructure\Automation\N8nWebhookAdapter:
+        arguments:
+            $webhookUrl: '%env(N8N_WEBHOOK_URL)%'

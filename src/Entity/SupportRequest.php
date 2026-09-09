@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\SupportRequestRepository;
+use App\Enum\SupportRequestPriority;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: SupportRequestRepository::class)]
@@ -21,6 +22,9 @@ class SupportRequest
 
     #[ORM\Column(length: 255)]
     private ?string $status = null;
+
+    #[ORM\Column(length: 20)]
+    private string $priority = SupportRequestPriority::NORMAL->value;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
@@ -69,6 +73,18 @@ class SupportRequest
     public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getPriority(): string
+    {
+        return $this->priority;
+    }
+
+    public function setPriority(SupportRequestPriority $priority): self
+    {
+        $this->priority = $priority->value;
+
+        return $this;
     }
 
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
