@@ -1,5 +1,5 @@
 import requests
-
+import time
 
 class SupportApiClient:
 
@@ -41,6 +41,78 @@ class SupportApiClient:
             params={"status": status} if status else {},
             headers={
                 "Authorization": f"Bearer {self.api_key}",
+            },
+        )
+
+        response.raise_for_status()
+
+        return response.json()
+
+
+class SuiteCRMClient:
+
+    def __init__(self, base_url, client_id, client_secret):
+        self.base_url = base_url
+        self.client_id = client_id
+        self.client_secret = client_secret
+
+        self.access_token = None
+        self.token_expires_at = 0
+
+    def get_access_token(self):
+        if self.access_token and time.time() < self.token_expires_at:
+            return self.access_token
+
+        response = requests.post(
+            f"{self.base_url}/Api/access_token",
+            data={
+                "grant_type": "client_credentials",
+            },
+            auth=(
+                self.client_id,
+                self.client_secret,
+            ),
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        self.access_token = data["access_token"]
+        self.token_expires_at = time.time() + data["expires_in"] - 60
+
+        return self.access_token
+
+    def get_accounts(self):
+        token = self.get_access_token()
+
+        response = requests.get(
+            f"{self.base_url}/Api/V8/module/Accounts",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/json",
+            },
+        )
+
+        response.raise_for_status()
+
+        return response.json()
+
+    def create_record(self, module, attributes):
+        token = self.get_access_token()
+
+        response = requests.post(
+            f"{self.base_url}/Api/V8/module",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/vnd.api+json",
+                "Accept": "application/json",
+            },
+            json={
+                "data": {
+                    "type": module,
+                    "attributes": attributes,
+                }
             },
         )
 
