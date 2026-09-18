@@ -34,16 +34,23 @@ suitecrm = SuiteCRMClient(
     os.getenv("SUITECRM_CLIENT_SECRET"),
 )
 
-accounts = suitecrm.get_accounts()
-print(accounts)
+# accounts = suitecrm.get_accounts()
+# print(accounts)
 
-accounts = suitecrm.get_accounts()
-print(accounts)
+
+# result = suitecrm.create_record(
+#     "Accounts",
+#     {
+#         "name": "Automation Demo Company",
+#     },
+# )
 
 result = suitecrm.create_record(
-    "Accounts",
+    "Cases",
     {
-        "name": "Automation Demo Company",
+        "name": "AI Support Case Test",
+        "priority": "High",
+        "status": "New",
     },
 )
 
