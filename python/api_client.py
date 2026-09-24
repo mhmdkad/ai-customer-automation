@@ -1,5 +1,10 @@
 import requests
 import time
+from http_client import request_with_retry
+from exceptions import CRMServiceError
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SupportApiClient:
 
@@ -63,15 +68,18 @@ class SuiteCRMClient:
         if self.access_token and time.time() < self.token_expires_at:
             return self.access_token
 
-        response = requests.post(
-            f"{self.base_url}/Api/access_token",
-            data={
-                "grant_type": "client_credentials",
-            },
-            auth=(
-                self.client_id,
-                self.client_secret,
-            ),
+        response = request_with_retry(
+            lambda: requests.post(
+                f"{self.base_url}/Api/access_token",
+                data={
+                    "grant_type": "client_credentials",
+                },
+                auth=(
+                    self.client_id,
+                    self.client_secret,
+                ),
+                timeout=10,
+            )
         )
 
         response.raise_for_status()
@@ -92,6 +100,7 @@ class SuiteCRMClient:
                 "Authorization": f"Bearer {token}",
                 "Accept": "application/json",
             },
+            timeout=10,
         )
 
         response.raise_for_status()
@@ -99,6 +108,8 @@ class SuiteCRMClient:
         return response.json()
 
     def create_record(self, module, attributes):
+        logger.info("Creating SuiteCRM record: module=%s", module)
+
         token = self.get_access_token()
 
         response = requests.post(
@@ -114,8 +125,18 @@ class SuiteCRMClient:
                     "attributes": attributes,
                 }
             },
+            timeout=10,
         )
 
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as exc:
+            logger.error(
+                "SuiteCRM request failed: status=%s",
+                response.status_code,
+            )
+            raise CRMServiceError(
+                f"SuiteCRM request failed with status {response.status_code}"
+            ) from exc
 
         return response.json()
