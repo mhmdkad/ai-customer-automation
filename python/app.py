@@ -1,8 +1,10 @@
+from typing import Literal
+
 from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 
 from api_client import SuiteCRMClient
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from services.support_case_service import SupportCaseService
 
 from config import (
@@ -25,10 +27,10 @@ def crm_service_error_handler(request, exc):
 
 
 class SupportCaseInput(BaseModel):
-    customer_email: str
+    customer_email: EmailStr
     message: str
-    category: str
-    priority: str
+    category: Literal["billing", "technical", "account", "other"]
+    priority: Literal["low", "normal", "high"]
 
 def get_support_case_service():
     return SupportCaseService(
