@@ -66,3 +66,40 @@ def test_create_support_case_rejects_invalid_priority():
     )
 
     assert response.status_code == 422
+
+def test_create_support_case_returns_503_when_crm_fails():
+    from exceptions import CRMServiceError
+
+    class FailingSupportCaseService:
+        def create_support_case(
+            self,
+            customer_email,
+            message,
+            category,
+            priority,
+        ):
+            raise CRMServiceError("SuiteCRM unavailable")
+
+    app.dependency_overrides[get_support_case_service] = (
+        lambda: FailingSupportCaseService()
+    )
+
+    try:
+        response = client.post(
+            "/support-cases",
+            json={
+                "customer_email": "test@example.com",
+                "message": "I cannot log in",
+                "category": "account",
+                "priority": "high",
+            },
+        )
+
+        assert response.status_code == 503
+        assert response.json() == {
+            "detail": "SuiteCRM unavailable"
+        }
+    finally:
+        app.dependency_overrides[get_support_case_service] = (
+            lambda: FakeSupportCaseService()
+        )

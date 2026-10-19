@@ -22,6 +22,7 @@ class SupportApiClient:
             headers={
                 "Authorization": f"Bearer {self.api_key}",
             },
+            timeout=10
         )
 
         response.raise_for_status()
@@ -34,6 +35,7 @@ class SupportApiClient:
             headers={
                 "Authorization": f"Bearer {self.api_key}",
             },
+            timeout=10
         )
 
         response.raise_for_status()
@@ -47,6 +49,7 @@ class SupportApiClient:
             headers={
                 "Authorization": f"Bearer {self.api_key}",
             },
+            timeout=10
         )
 
         response.raise_for_status()
